@@ -1,8 +1,6 @@
 # Spectrum-conv
 
-<br>
-
-### パッケージ・モジュール
+### ◆ パッケージ・モジュール
 
 ```bash
 $ pip install -r requirements.txt
@@ -15,7 +13,7 @@ $ pip install -r requirements.txt
 
 <br>
 
-### 実行
+### ◆ 実行
 
 ※ デフォルトでは`crossing1.wav`が指定されている
 
@@ -39,7 +37,7 @@ $ python spectrum-conv.py {wavファイルのディレクトリ}
 
 <br>
 
-### 出力結果
+### ◆ 出力結果
 
 + crossing1.wav - result
 ![crossing1.jpg](https://github.com/kazuya0202/spectrum-conv/blob/master/spectrum-save-img/crossing1_001.jpg)
@@ -53,7 +51,7 @@ $ python spectrum-conv.py {wavファイルのディレクトリ}
 
 <br>
 
-### separate-wav.py
+### ◆ separate_wav.py
 
 wavファイルを1秒間隔で、0.1秒ずつずらしながら分割保存する。
 
@@ -97,7 +95,7 @@ $ python separate-wav.py {wavファイルのディレクトリ}
 
 <br>
 
-### run-conv.py
+### ◆ run_conv.py
 
 分割保存したデータをスペクトログラムに変換する。（内部で`spectrum-conv.py`を実行する）
 
