@@ -1,0 +1,12 @@
+wav/
+export/
+annotated/
+croped-imgs_before-annotated/
+
+spectrum-save-img/[cC]rossing*/
+spectrum-save-img/[kK]laxon*/
+spectrum-save-img/[nN]oise/
+!spectrum-save-img/*.jpg
+
+__pycache__/
+_test/

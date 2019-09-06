@@ -1,0 +1,6 @@
+pydub
+numpy
+pandas
+matplotlib
+seaborn
+
