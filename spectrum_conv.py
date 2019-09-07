@@ -93,7 +93,6 @@ def conv(path):
     plt.close()
 
 
-
 def main(path=None):
     default = 'crossing1.wav'
     argv = sys.argv
