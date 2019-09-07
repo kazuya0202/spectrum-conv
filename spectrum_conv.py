@@ -90,6 +90,9 @@ def conv(path):
     plt.savefig(save_name)
     print(f"Save to '{save_name}'")
 
+    plt.close()
+
+
 
 def main(path=None):
     default = 'crossing1.wav'
