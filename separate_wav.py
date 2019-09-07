@@ -93,7 +93,6 @@ def main(path='crossing1'):
 
     # if os.path.isfile(path):
     if isfile:
-        print("aa")
         cut_wav(path, cut_time)
 
     else:
