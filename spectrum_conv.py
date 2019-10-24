@@ -7,6 +7,7 @@ import seaborn as sns
 import os
 import sys
 import glob
+from PIL import Image
 
 target_dir = 'spectrum-save-img'
 
@@ -69,6 +70,7 @@ def conv(path):
                 xticklabels=False,
                 yticklabels=False,
                 cmap=plt.cm.gist_rainbow_r,
+                vmin=-1,
                 cbar=False,
                 square=True  # 1秒ごとにするときに都合がいい
                 )
@@ -92,6 +94,16 @@ def conv(path):
 
     plt.close()
 
+    crop(save_name)
+
+
+def crop(save_path, crop_range=(138, 63, 518, 427)):
+    """ 画像を切り取る """
+
+    img = Image.open(save_path)  # 保存
+    img_crop = img.crop(crop_range)  # 切り取り
+    img_crop.save(save_path)  # 保存
+
 
 def main(path=None):
     default = 'crossing1.wav'
@@ -107,7 +119,6 @@ def main(path=None):
     # ファイルなら
     if os.path.isfile(path):
         conv(path)
-
     # ディレクトリ
     else:
         for file_path in glob.glob(f'{path}/*'):
