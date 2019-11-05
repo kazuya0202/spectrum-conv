@@ -3,14 +3,12 @@ import sys
 import os
 import numpy as np
 from pydub import AudioSegment
-# sys.path.append('../../../prcn2019/#realtime-recognition/_test/')
-# from spectrum import Spectrum
-# from record import Record
 from recognize import SoundRecognition
 from record import Record
+from util import Util
 
 import glob
-import librosa
+# import librosa
 
 
 def numpy2AudioSegment(data):
@@ -47,7 +45,36 @@ def append_white_noise(data, noise_ratio=3000):
 
 
 if __name__ == '__main__':
-    exp_path = 'augmented_noise'
+    # target wav files
+    # glob_path = './wav/pooon/*.wav'
+
+    # export path
+    # exp_path = 'augmented_noise'
+
+    argv = sys.argv
+    if len(argv) <= 2:
+        print('Usage: python augmentation.py <wav_folder> [export_path]')
+        print()
+        print('  - python augmentation.py ./wav augmented')
+        print('  - python augmentation.py ./wav')
+        print()
+        print('  default export_path: export/')
+        exit()
+
+    glob_path = argv[1]
+    exp_path = argv[2] if len(argv) >= 3 else 'export'
+
+    glob_path += '/*.wav'
+
+    # if len(argv) >= 2:
+    #     glob_path = argv[1]
+
+    # if len(argv) >= 3:
+    #     exp_path = argv[2]
+
+    if not os.path.exists(exp_path):
+        os.makedirs(exp_path)
+
     # spec = Spectrum(export_path=exp_path, crop_range=(138, 63, 518, 427))
     sr = SoundRecognition()
     rc = Record()
@@ -57,7 +84,6 @@ if __name__ == '__main__':
     start = 4000
 
     img_name = []
-    glob_path = './wav/pooon/*.wav'
     for file in glob.glob(glob_path):
         wav_path = file
         sound = rc.load_wav(wav_path)  # 読み込み
@@ -79,4 +105,4 @@ if __name__ == '__main__':
             augmented_data = append_white_noise(sample, noise_ratio)
 
             sound = numpy2AudioSegment(augmented_data)
-            sr.convert(path, sound)
+            sr.convert(path, sound, exp_path=exp_path)
