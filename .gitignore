@@ -9,3 +9,5 @@ spectrum-save-img/*.py
 
 __pycache__/
 _test/
+
+augmentation/**/*.jpg
