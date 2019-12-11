@@ -23,7 +23,6 @@ def cut_wav(filename, time):
 
     # フレームに応じて図の横幅が変わるため、一定値にする
     frames = int(ch * fr * t)
-    # frames = 10000  # 数値はかえてもおけ (下に書く
 
     num_cut = int(integer // t)
 
@@ -56,9 +55,8 @@ def cut_wav(filename, time):
 
         out_file = f'{out_file_path}/{filename}_{i}.wav'
         start_cut = i * frames
-        end_cut = (i+10) * frames + frames
+        end_cut = (i + 10) * frames + frames
 
-        # print(start_cut, end_cut)
         if end_cut > end_condition:
             print('  over frames')
             return
