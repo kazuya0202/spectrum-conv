@@ -9,6 +9,13 @@ class Utils:
     def __init__(self):
         pass
 
+    def has_elems_in_list(self, _list, elems):
+        if type(_list) == list or type(_list) == tuple:
+            res = [True if elem in _list else False for elem in elems]
+            return any(res)
+
+        return elems in _list
+
     # OS
     def make_dirs(self, dir_name):
         """指定したディレクトリが存在しなければディレクトリを作成"""

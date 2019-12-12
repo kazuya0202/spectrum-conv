@@ -15,26 +15,37 @@ from sys import path
 
 from utils import Utils
 from global_variables import GlobalVariables
+from separate_wav import SeparateWav
 
 
 class SpectrumConvertion:
     def __init__(self):
         self.ul = Utils()
         self.gv = GlobalVariables()
+        self.sw = SeparateWav()
 
         self.path = Path('')
 
         # 音データ
         self.sound = None
+        self.sample = None
+
+        self.wav_exp_base = Path(self.gv.wav_exp_dir)
+        self.img_exp_base = Path(self.gv.img_exp_dir)
+        # self.it = 0
 
         if self.gv.is_wav_save:
-            Path.mkdir(self.gv.wav_export)
+            wav_exp_dir = Path(self.gv.wav_exp_dir)
+            Path.mkdir(wav_exp_dir)
 
-    def conv_and_plot(self):
-        print(self.path)
-
+    def conv_and_plot(self, wav_data=None):
         # load file
-        self.sound = self.ul.load_wav(self.path)
+        if self.gv.is_separate:
+            self.sound = self.sw.numpy2AudioSegment(
+                wav_data, self.gv.SAMPLE_WIDHT, self.gv.RATE, self.gv.CHANNELS)
+        else:
+            self.sound = self.ul.load_wav(self.path)
+
         self.sample = self.sound._data
 
         """ スペクトログラム作成 """
@@ -77,36 +88,55 @@ class SpectrumConvertion:
                     vmin=1,
                     square=True)
 
+    def save_datas(self, it):
+        fname = self.path.name
+
+        # save image (== figure)
+        if self.gv.is_save_img:
+            img_exp_dir = self.img_exp_base.joinpath(self.path.parent)
+            exp_path = img_exp_dir.joinpath(f'{fname}_{it}.jpg')
+            print(exp_path)
+
+            # plt.savefig(exp_path)
+            # print(f'Save to {exp_path}')
+
+        # save wav
+        #   when file is separated
+        if self.gv.is_save_wav and self.gv.is_separate:
+            wav_exp_dir = self.wav_exp_base.joinpath(self.path.parent)
+            exp_path = wav_exp_dir.joinpath(f'{fname}_{it}.wav')
+            print(exp_path)
+
+            # self.sw.write_wav(1, exp_path)
+            # print(f'Save to {exp_path}')
+
+        # 切り取るなら
+        if self.gv.is_crop:
+            self.ul.crop(self.gv.crop_range)
+
     def main(self):
         argv = sys.argv
 
-        # self.file_path = argv[1] if len(argv) >= 2 \
-        #     else input('> Enter file path: ')
-
-        if len(argv) >= 2 and (argv[1] == '-h' or argv[1] == '--help'):
+        if self.ul.has_elems_in_list(argv, ['-h', '--help']):
             print('Usage:')
             print('  python <this-file>.py **/*.wav')
             print('  python <this-file>.py <audio_file>.wav')
             print('  python <this-file>.py')
-
             exit()
-            # return
+
+        if self.ul.has_elems_in_list(argv, ['-t', '--test']):
+            print('It specified a \'test\' option.')
+            exit()
 
         if len(argv) == 1:
             fpath = input('> Enter file path: ')
             argv.append(fpath)
 
-        # script.py は無視するために it は 1 から
-        argv_len = len(argv)
-        it = 1
+        # remove <script>.py to ignore
+        argv.remove(argv[0])
 
         # while (it < argv_len):
         for i, wav_file in enumerate(argv):
-            # ignore <script>.py
-            if i == 0:
-                continue
-
-            # self.file_path = Path(argv[it])
             self.path = Path(wav_file)
 
             # 存在しないなら continue
@@ -114,37 +144,28 @@ class SpectrumConvertion:
                 # it += 1
                 continue
 
-            fname = self.path.stem
-            ext = self.path.suffix
+            # fname = self.path.stem
+            # ext = self.path.suffix
 
             # wav ファイルでないなら continue
-            # if self.ul.get_ext(self.file_path) != 'wav':
-            if ext != '.wav':
+            if self.path.suffix[1:] != 'wav':
                 print('not wav.')
                 # it += 1
                 continue
 
-            # print(self.file_path)
-            # 変換
-            self.conv_and_plot()
+            it = 0
+            wav_data = None
 
-            # self.path.parent
-            # self.path.joinpath()
-            wav_export_dir = Path(self.gv.wav_export).joinpath(self.path.parent)
-            print(wav_export_dir)
+            # for it, wav_data in enumerate(self.sw.cut_wav()):
+            while(True):
+                # 変換
+                self.conv_and_plot(wav_data)
+                self.save_datas(it)
 
-            p = wav_export_dir.joinpath(f'{fname}_{i}.wav')
-            print(p)
+                it += 1
+                break
 
-            if self.gv.is_save:
-                plt.savefig(fname)
-
-            # 切り取るなら
-            if self.gv.is_crop:
-                self.ul.crop(self.gv.crop_range)
-
-            # it += 1
-
+        # self.it += 1
         return 0
 
 

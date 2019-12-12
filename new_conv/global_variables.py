@@ -1,22 +1,24 @@
 class GlobalVariables:
     def __init__(self):
         # conv()
+
         # 画像出力先ディレクトリ
-        self.export_dir = 'spectrum-img'
+        self.img_exp_dir = 'spectrum-img'
+        # wav 出力先ディレクトリ
+        self.wav_exp_dir = 'wav_exp'
+
+        # true / false
+        self.is_crop = True         # 切り取るかどうか
+        self.is_save_img = True     # 画像を保存するかどうか
+        self.is_separate = True     # 分離するかどうか
+        self.is_save_wav = False    # wav を保存するかどうか
+        self.is_augment = False     # 増幅するかどうか
 
         # crop()
         # 画像の切り取り範囲
         self.crop_range = (169, 58, 487, 427)
 
-        # 切り取るかどうか
-        self.is_crop = True
-
-        # 保存するかどうか
-        self.is_save = False
-
-        self.wav_export = 'wav_export'
-        self.is_wav_save = False
-
-        # augmentation()
-        # 増幅するかどうか
-        self.is_augment = False
+        # separate_wav
+        self.SAMPLE_WIDHT = 2
+        self.RATE = 44100
+        self.CHANNELS = 1

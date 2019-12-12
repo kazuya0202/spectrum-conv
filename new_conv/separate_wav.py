@@ -1,9 +1,10 @@
 import wave
 import struct
-import math
+import numpy as np
 import os
 import sys
 from scipy import int16, frombuffer
+from pydub import AudioSegment
 
 
 class SeparateWav:
@@ -19,7 +20,7 @@ class SeparateWav:
         self.fr = wr.getframerate()
         self.fn = wr.getnframes()
         total_time = 1.0 * self.fn / self.fr
-        integer = math.floor(total_time)
+        integer = np.floor(total_time)
         # t = int(time)
         t = time
 
@@ -61,12 +62,13 @@ class SeparateWav:
 
             if end_cut > end_condition:
                 print('  over frames')
-                return
+                # return
+                yield None
 
             Y = X[start_cut:end_cut]
-            self.out_data = struct.pack('h' * len(Y), *Y)
+            self.wav_data = struct.pack('h' * len(Y), *Y)
 
-            # yield return
+            yield self.wav_data
 
             # output
             # with wave.open(out_file, 'w') as ww:
@@ -75,9 +77,31 @@ class SeparateWav:
             #     ww.setframerate(self.fr)
             #     ww.writeframes(out_data)
 
-    def write_wav(self, data, out_path):
-        with wave.open(out_path, 'w') as ww:
+    def write_wav(self, wav_data, exp_path):
+        with wave.open(exp_path, 'w') as ww:
             ww.setnchannels(self.ch)
             ww.setsampwidth(self.width)
             ww.setframerate(self.fr)
-            ww.writeframes(data)
+            ww.writeframes(wav_data)
+
+    def numpy2AudioSegment(self, data, sample_width, frame_rate, channels):
+        """ dataをnumpy配列からAudioSegmentに変換する
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            音データ
+
+        Returns
+        -------
+        sound : pydub.audio_segment.AudioSegment
+            変換後の音データ
+        """
+
+        sound = AudioSegment(
+            data=data,
+            sample_width=sample_width,
+            frame_rate=frame_rate,
+            channels=channels)
+
+        return sound
