@@ -7,7 +7,6 @@ import seaborn as sns
 import os
 import sys
 import glob
-from PIL import Image
 
 target_dir = 'spectrum-save-img'
 
@@ -64,16 +63,15 @@ def conv(path):
     # plt.figure(figsize=(20, 6))
 
     # seaborn の heatmap を使う
-    sns.heatmap(data=np.log(df_amp.iloc[:, :100].T),
-                # xticklabels=100,
-                # yticklabels=10,
+    plot_data = pd.DataFrame(data=ampList, index=time, columns=freq)
+    sns.heatmap(data=np.log(plot_data.iloc[:, :100].T),
                 xticklabels=False,
                 yticklabels=False,
-                cmap=plt.cm.gist_rainbow_r,
-                vmin=-1,
                 cbar=False,
-                square=True  # 1秒ごとにするときに都合がいい
-                )
+                cmap=plt.cm.gist_rainbow_r,
+                vmin=1,
+                square=True)
+
     # save
 
     # 1階層上のフォルダ名を取得
@@ -92,18 +90,16 @@ def conv(path):
     plt.savefig(save_name)
     print(f"Save to '{save_name}'")
 
-    # plt.close()
-    plt.clf()
+    plt.close()
 
-    crop(save_name)
-
-
-def crop(save_path, crop_range=(138, 63, 518, 427)):
     """ 画像を切り取る """
+    from PIL import Image
+    # crop_range = (169, 58, 487, 427)
+    crop_range = (138, 63, 518, 427)
 
-    img = Image.open(save_path)  # 保存
+    img = Image.open(save_name)  # 保存
     img_crop = img.crop(crop_range)  # 切り取り
-    img_crop.save(save_path)  # 保存
+    img_crop.save(save_name)  # 保存
 
 
 def main(path=None):
@@ -120,6 +116,7 @@ def main(path=None):
     # ファイルなら
     if os.path.isfile(path):
         conv(path)
+
     # ディレクトリ
     else:
         for file_path in glob.glob(f'{path}/*'):
