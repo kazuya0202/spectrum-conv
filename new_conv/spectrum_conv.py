@@ -13,14 +13,15 @@ from PIL import Image
 from pathlib import Path
 from sys import path
 
-from utils import Utils
+# from utils import Utils
+import utils as ul
 from global_variables import GlobalVariables
 from separate_wav import SeparateWav
 
 
 class SpectrumConvertion:
     def __init__(self):
-        self.ul = Utils()
+        # ul = Utils()
         self.gv = GlobalVariables()
         self.sw = SeparateWav()
 
@@ -34,19 +35,35 @@ class SpectrumConvertion:
         self.img_exp_base = Path(self.gv.img_exp_dir)
         # self.it = 0
 
-        if self.gv.is_wav_save:
+        if self.gv.is_save_wav:
             wav_exp_dir = Path(self.gv.wav_exp_dir)
             Path.mkdir(wav_exp_dir)
 
     def conv_and_plot(self, wav_data=None):
         # load file
         if self.gv.is_separate:
-            self.sound = self.sw.numpy2AudioSegment(
-                wav_data, self.gv.SAMPLE_WIDHT, self.gv.RATE, self.gv.CHANNELS)
+            # self.sound = self.sw.numpy2AudioSegment(
+            #     wav_data, self.gv.SAMPLE_WIDTH, self.gv.RATE, self.gv.CHANNELS)
+            print(len(wav_data))
+            exit()
+            self.sample = AudioSegment(wav_data, self.gv.SAMPLE_WIDTH, self.gv.RATE, self.gv.CHANNELS)
         else:
-            self.sound = self.ul.load_wav(self.path)
+            self.sound = ul.load_wav(self.path)
+            self.sample = self.sound._data
 
-        self.sample = self.sound._data
+        print(self.sample)
+        print(len(self.sample))
+        # self.sample = self.sound['data']
+        # s = AudioSegment(self.sample, self.gv.SAMPLE_WIDTH, self.gv.RATE, self.gv.CHANNELS)
+
+        # self.sample = np.array(self.sample)
+        # print(self.sample)
+        # print(type(self.sample))
+
+        # self.sound = ul.load_wav(self.path)
+        # print(self.sound._data)
+
+        exit()
 
         """ スペクトログラム作成 """
         w = 1000  # 窓枠
@@ -112,31 +129,11 @@ class SpectrumConvertion:
 
         # 切り取るなら
         if self.gv.is_crop:
-            self.ul.crop(self.gv.crop_range)
+            ul.crop(self.gv.crop_range)
 
-    def main(self):
-        argv = sys.argv
-
-        if self.ul.has_elems_in_list(argv, ['-h', '--help']):
-            print('Usage:')
-            print('  python <this-file>.py **/*.wav')
-            print('  python <this-file>.py <audio_file>.wav')
-            print('  python <this-file>.py')
-            exit()
-
-        if self.ul.has_elems_in_list(argv, ['-t', '--test']):
-            print('It specified a \'test\' option.')
-            exit()
-
-        if len(argv) == 1:
-            fpath = input('> Enter file path: ')
-            argv.append(fpath)
-
-        # remove <script>.py to ignore
-        argv.remove(argv[0])
-
+    def main(self, params):
         # while (it < argv_len):
-        for i, wav_file in enumerate(argv):
+        for i, wav_file in enumerate(params):
             self.path = Path(wav_file)
 
             # 存在しないなら continue
@@ -153,24 +150,15 @@ class SpectrumConvertion:
                 # it += 1
                 continue
 
-            it = 0
+            # it = 0
             wav_data = None
 
-            # for it, wav_data in enumerate(self.sw.cut_wav()):
-            while(True):
+            tmp_params = [self.path.__str__(), self.gv.CUT_TIME]
+            # while(True):
+            for it, wav_data in enumerate(self.sw.cut_wav(*tmp_params)):
                 # 変換
                 self.conv_and_plot(wav_data)
                 self.save_datas(it)
 
-                it += 1
-                break
-
-        # self.it += 1
-        return 0
-
-
-if __name__ == '__main__':
-    sc = SpectrumConvertion()
-    exit_status = sc.main()
-
-    sys.exit(exit_status)
+                # it += 1
+                # break

@@ -11,9 +11,10 @@ class SeparateWav:
     def __init__(self):
         pass
 
-    def cut_wav(self, path, time, export_dir):
-        wav_file = f'{path}.wav'
-        wr = wave.open(wav_file, 'r')
+    # def cut_wav(self, path, time, export_dir):
+    def cut_wav(self, path, time):
+        # wav_file = f'{path}.wav'
+        wr = wave.open(path, 'r')
 
         self.ch = wr.getnchannels()
         self.width = wr.getsampwidth()
@@ -44,19 +45,19 @@ class SeparateWav:
         wr.close()
         X = frombuffer(data, dtype=int16)
 
-        out_file_path = f'{export_dir}/{path}'
-        if not os.path.exists(out_file_path):
-            os.makedirs(out_file_path)
+        # out_file_path = f'{export_dir}/{path}'
+        # if not os.path.exists(out_file_path):
+        #     os.makedirs(out_file_path)
 
         end_condition = frames * num_cut
 
-        path = os.path.basename(path)
+        # path = os.path.basename(path)
 
         frames = 10000  # 横幅を合わせるための
         for i in range(num_cut):
             print(i)
 
-            self.out_file = f'{out_file_path}/{path}_{i}.wav'
+            # self.out_file = f'{out_file_path}/{path}_{i}.wav'
             start_cut = i * frames
             end_cut = (i + 10) * frames + frames
 
