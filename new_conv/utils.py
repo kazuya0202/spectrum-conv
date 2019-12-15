@@ -1,48 +1,21 @@
-import os
 from pydub import AudioSegment
+import wave
 import numpy as np
-import matplotlib.pyplot as plt
-from pathlib import Path
+from PIL import Image
 
 
-def has_elems_in_list(_list, elems):
+def has_elems_in_list(_list, elms):
+    """ リスト内に要素が含まれているかどうか """
     if isinstance(_list, list) or isinstance(_list, tuple):
-        res = [True if elem in _list else False for elem in elems]
+        res = [True if elm in _list else False for elm in elms]
         return any(res)
 
-    return elems in _list
-
-# OS
-
-
-def make_dirs(dir_name):
-    """指定したディレクトリが存在しなければディレクトリを作成"""
-    if not Path.exists(dir_name):
-        os.makedirs(dir_name)
-
-
-# def splitext(path):
-#     """拡張子で区切る"""
-#     sp = os.path.splitext(path)
-#     return (sp[0], sp[1])
-
-
-# def get_fname(path):
-#     """ファイル名のみを取得"""
-#     fname = splitext(path)[0]
-#     return fname
-
-
-# def get_ext(path):
-#     """拡張子のみを取得"""
-#     ext = splitext(path)[1][1:]
-#     return ext
-
-# SPECTRUM
+    return elms in _list
 
 
 def load_wav(wav_path):
-    """wavファイルを読み込む"""
+    """ wavファイルを読み込む """
+
     # 読み込み
     sound = AudioSegment.from_wav(wav_path)
 
@@ -54,56 +27,46 @@ def load_wav(wav_path):
     return sound
 
 
-def crop(crop_range):
-    print(f'crop_range: {crop_range}')
+def crop_img(crop_range, img_path):
+    """ 画像を切り取る """
+
+    img = Image.open(img_path)  # 保存
+    img_crop = img.crop(crop_range)  # 切り取り
+    img_crop.save(img_path)  # 保存
 
 
-# class Utils:
-#     def __init__(self):
-#         pass
+def save_as_wav(data, sample_width, frame_rate, channels, exp_path):
+    """ wave ファイルとして保存 """
 
-#     def has_elems_in_list(self, _list, elems):
-#         if isinstance(_list, list) or isinstance(_list, tuple):
-#             res = [True if elem in _list else False for elem in elems]
-#             return any(res)
+    with wave.open(exp_path, 'w') as w:
+        w.setsampwidth(sample_width)
+        w.setframerate(frame_rate)
+        w.setnchannels(channels)
+        w.writeframes(data)
 
-#         return elems in _list
 
-#     # OS
+def numpy2AudioSegment(data, sample_width, frame_rate, channels):
+    """ dataをnumpy配列からAudioSegmentに変換する
 
-#     def make_dirs(self, dir_name):
-#         """指定したディレクトリが存在しなければディレクトリを作成"""
-#         if not Path.exists(dir_name):
-#             os.makedirs(dir_name)
+    Parameters
+    ----------
+    data : numpy.ndarray
+        音データ
 
-#     def splitext(self, path):
-#         """拡張子で区切る"""
-#         sp = os.path.splitext(path)
-#         return (sp[0], sp[1])
+    Returns
+    -------
+    sound : pydub.audio_segment.AudioSegment
+        変換後の音データ
+    """
 
-#     def get_fname(self, path):
-#         """ファイル名のみを取得"""
-#         fname = self.splitext(path)[0]
-#         return fname
+    sound = AudioSegment(
+        data=data,
+        sample_width=sample_width,
+        frame_rate=frame_rate,
+        channels=channels)
 
-#     def get_ext(self, path):
-#         """拡張子のみを取得"""
-#         ext = self.splitext(path)[1][1:]
-#         return ext
+    samples = np.array(sound.get_array_of_samples())
+    sample = samples[::sound.channels]
+    sound._data = sample
 
-#     # SPECTRUM
-
-#     def load_wav(self, wav_path):
-#         """wavファイルを読み込む"""
-#         # 読み込み
-#         sound = AudioSegment.from_wav(wav_path)
-
-#         # サンプルデータ取得
-#         samples = np.array(sound.get_array_of_samples())
-#         sample = samples[::sound.channels]
-#         sound._data = sample
-
-#         return sound
-
-#     def crop(self, crop_range):
-#         print(f'crop_range: {crop_range}')
+    return sound

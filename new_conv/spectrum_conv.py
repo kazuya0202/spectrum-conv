@@ -1,73 +1,34 @@
-from os.path import exists
-from pydub import AudioSegment
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import os
-import sys
-import glob
-from PIL import Image
-
-from pathlib import Path
-from sys import path
-
-# from utils import Utils
-import utils as ul
 from global_variables import GlobalVariables
-from separate_wav import SeparateWav
 
 
 class SpectrumConvertion:
-    def __init__(self):
-        # ul = Utils()
+    def __init__(self, plt_conf=None):
         self.gv = GlobalVariables()
-        self.sw = SeparateWav()
 
-        self.path = Path('')
+        # # プロットの設定
+        self.plt_conf = {
+            'x': False,
+            'y': False,
+            'cbar': False,
+            'cmap': plt.cm.gist_rainbow_r,
+            'vmin': -1,
+            'square': True
+        }
 
-        # 音データ
-        self.sound = None
-        self.sample = None
+        if plt_conf is not None:
+            self.plt_conf = plt_conf
 
-        self.wav_exp_base = Path(self.gv.wav_exp_dir)
-        self.img_exp_base = Path(self.gv.img_exp_dir)
-        # self.it = 0
-
-        if self.gv.is_save_wav:
-            wav_exp_dir = Path(self.gv.wav_exp_dir)
-            Path.mkdir(wav_exp_dir)
-
-    def conv_and_plot(self, wav_data=None):
-        # load file
-        if self.gv.is_separate:
-            # self.sound = self.sw.numpy2AudioSegment(
-            #     wav_data, self.gv.SAMPLE_WIDTH, self.gv.RATE, self.gv.CHANNELS)
-            print(len(wav_data))
-            exit()
-            self.sample = AudioSegment(wav_data, self.gv.SAMPLE_WIDTH, self.gv.RATE, self.gv.CHANNELS)
-        else:
-            self.sound = ul.load_wav(self.path)
-            self.sample = self.sound._data
-
-        print(self.sample)
-        print(len(self.sample))
-        # self.sample = self.sound['data']
-        # s = AudioSegment(self.sample, self.gv.SAMPLE_WIDTH, self.gv.RATE, self.gv.CHANNELS)
-
-        # self.sample = np.array(self.sample)
-        # print(self.sample)
-        # print(type(self.sample))
-
-        # self.sound = ul.load_wav(self.path)
-        # print(self.sound._data)
-
-        exit()
+    def conv_and_plot(self, sound):
+        sample = sound._data
 
         """ スペクトログラム作成 """
-        w = 1000  # 窓枠
-        s = 500  # 刻み
+        w = 1024  # 窓枠
+        s = 512   # 刻み
 
         ampList = []  # スペクトル格納用
         argList = []  # 偏角格納用
@@ -76,20 +37,20 @@ class SpectrumConvertion:
         data = None
 
         # 刻みずつずらしながら窓幅分のデータをフーリエ変換
-        for i in range(int((self.sample.shape[0] - w) / s)):
-            data = self.sample[i * s:i * s + w]
+        for i in range(int((sample.shape[0] - w) / s)):
+            data = sample[i * s:i * s + w]
             spec = np.fft.fft(data)
             spec = spec[:int(spec.shape[0] / 2)]
-            spec[0] = spec[0] / 2
+            spec[0] /= 2
             ampList.append(np.abs(spec))
             argList.append(np.angle(spec))
 
         # 周期数は共通なので1回だけ計算（縦軸表示に使う）
-        freq = np.fft.fftfreq(data.shape[0], 1.0 / self.sound.frame_rate)
+        freq = np.fft.fftfreq(data.shape[0], 1.0 / sound.frame_rate)
         freq = freq[:int(freq.shape[0] / 2)]
 
         # 時間も共通なので1回だけ計算（横軸表示に使う）
-        time = np.arange(0, i + 1, 1) * s / self.sound.frame_rate
+        time = np.arange(0, i + 1, 1) * s / sound.frame_rate
 
         # numpyの配列にする
         ampList = np.array(ampList)
@@ -97,68 +58,131 @@ class SpectrumConvertion:
 
         # seaborn の heatmap を使う
         plt_data = pd.DataFrame(data=ampList, index=time, columns=freq)
+
+        # plot config
+        xticklabels = self.plt_conf['x']
+        yticklabels = self.plt_conf['y']
+        cmap = self.plt_conf['cmap']
+        vmin = self.plt_conf['vmin']
+        cbar = self.plt_conf['cbar']
+        square = self.plt_conf['square']
+
         sns.heatmap(data=np.log(plt_data.iloc[:, :100].T),
-                    xticklabels=False,
-                    yticklabels=False,
-                    cbar=False,
-                    cmap=plt.cm.gist_rainbow_r,
-                    vmin=1,
-                    square=True)
+                    xticklabels=xticklabels,
+                    yticklabels=yticklabels,
+                    cmap=cmap,
+                    vmin=vmin,
+                    cbar=cbar,
+                    square=square)
 
-    def save_datas(self, it):
-        fname = self.path.name
+        # プロットした図を保存
+        plt_fig = plt.gcf()
 
-        # save image (== figure)
-        if self.gv.is_save_img:
-            img_exp_dir = self.img_exp_base.joinpath(self.path.parent)
-            exp_path = img_exp_dir.joinpath(f'{fname}_{it}.jpg')
-            print(exp_path)
+        # 軸を見やすくする
+        self.change_axis_range()
 
-            # plt.savefig(exp_path)
-            # print(f'Save to {exp_path}')
+        # 表示するかどうか
+        if self.gv.plt_show_img:
+            plt.show()
 
-        # save wav
-        #   when file is separated
-        if self.gv.is_save_wav and self.gv.is_separate:
-            wav_exp_dir = self.wav_exp_base.joinpath(self.path.parent)
-            exp_path = wav_exp_dir.joinpath(f'{fname}_{it}.wav')
-            print(exp_path)
+        if self.gv.plt_show_pause:
+            plt.pause(self.gv.plt_pause_interval)
 
-            # self.sw.write_wav(1, exp_path)
-            # print(f'Save to {exp_path}')
+        return plt_fig
 
-        # 切り取るなら
-        if self.gv.is_crop:
-            ul.crop(self.gv.crop_range)
+        # ax.set_xticklabels(xs)
+        # ax.set_yticklabels(ys)
+        # ax.set_xticklabels('{}'.format(str(x)) for x in xs)
+        # ax.set_yticklabels(['{:,.2%}'.format(x) for x in ])
 
-    def main(self, params):
-        # while (it < argv_len):
-        for i, wav_file in enumerate(params):
-            self.path = Path(wav_file)
+        # for v in vals:
+        # import matplotlib.ticker as ticker
+        # ax.get_xaxis().get_major_formatter().set_useOffset(False)
+        # ax.get_xaxis().set_major_locator(ticker.MaxNLocator(integer=True))
 
-            # 存在しないなら continue
-            if not self.path.exists():
-                # it += 1
-                continue
+        # xs = [x.get_text() for x in plt.xticks()[1]]
+        # ys = [y.get_text() for y in plt.yticks()[1]]
 
-            # fname = self.path.stem
-            # ext = self.path.suffix
+        # print(xs)
 
-            # wav ファイルでないなら continue
-            if self.path.suffix[1:] != 'wav':
-                print('not wav.')
-                # it += 1
-                continue
+        # xs = [(float(x)) for x in xs]
+        # ys = [(float(y)) for y in ys]
 
-            # it = 0
-            wav_data = None
+        # xxs = np.linspace(min(xs), max(xs), 11)
+        # yys = np.linspace(min(ys), max(ys), 11)
 
-            tmp_params = [self.path.__str__(), self.gv.CUT_TIME]
-            # while(True):
-            for it, wav_data in enumerate(self.sw.cut_wav(*tmp_params)):
-                # 変換
-                self.conv_and_plot(wav_data)
-                self.save_datas(it)
+        # xticks = plt.xticks()
+        # print(type(xticks[0]))
+        # print(type(xticks[1]))
+        # # print(xticks[1])
+        # for x in xticks[1]:
+        #     print(x)
 
-                # it += 1
-                # break
+        # ax.xaxis.set_ticks(xxs)
+        # ax.yaxis.set_ticks(yys)
+        # ax.xaxis.set_ticks(['{:.2f}'.format(x) for x in xxs])
+        # ax.yaxis.set_ticks(['{:.2f}'.format(x) for x in yys])
+        # plt.xticks(np.arange(min(xxs), max(xxs), 10))
+        # plt.yticks(np.arange(min(yys), max(yys), 10))
+        # plt.ylim(min(yys), max(yys))
+        # plt.xlim(min(xxs), max(xxs))
+
+        # ticks0 = []
+        # # ticks1 = []
+        # ticks1 = plt.cbook.silent_list()
+        # for i, x in enumerate(xxs):
+        #     p = i * 10
+        #     ticks0.append(p)
+        #     ticks1.append(plt.Text(p, 0, x))
+
+        # ticks0 = np.array(ticks0)
+        # print(type(ticks1))
+        # # for a in ticks1:
+        # #     print(a)
+        # plt.xticks([ticks0, ticks1])
+        # plt.yticks(yys)
+
+        # plt.xticks(np.arange(len(xxs)), xxs)
+        # plt.yticks(np.arange(len(yys)), yys)
+        # ax.set(xticks=xxs, yticks=yys)
+
+        # from matplotlib import ticker
+        # ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
+        # ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
+
+        # ticks = 10
+        # plt.xticks(range(0, len(plt_data), ticks), plt_data[::ticks])
+
+    def change_axis_range(self):
+        chk_list = [
+            self.plt_conf['x'],
+            self.plt_conf['y'],
+            self.plt_conf['cbar']
+        ]
+
+        if any(chk_list):
+            """ MEMO
+            時間軸（X）はファイルが長いのに対応できてないから
+            調整いるかも
+            """
+            # 軸の目盛りを調整する
+            def fill_label(labels, interval):
+                """ 表示間隔を変更 """
+                for i, label in enumerate(labels):
+                    if (i % interval == 0):
+                        txt = label.get_text()
+                        labels[i] = txt[:txt.find('.') + 3]
+                    else:
+                        labels[i] = ''
+                return labels
+
+            # 各軸のラベルを取得
+            x_labels = plt.xticks()[1]
+            y_labels = plt.yticks()[1]
+
+            X = fill_label(x_labels, self.gv.plt_xtick_interval)
+            Y = fill_label(y_labels, self.gv.plt_ytick_interval)
+
+            # 変更したラベルを設定
+            plt.xticks(ticks=np.arange(len(X)), labels=X, rotation=90)
+            plt.yticks(ticks=np.arange(len(Y)), labels=Y)

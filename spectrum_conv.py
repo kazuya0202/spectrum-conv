@@ -27,6 +27,11 @@ def conv(path):
     samples = np.array(sound.get_array_of_samples())
     sample = samples[::sound.channels]
 
+    print(len(sample))
+    print(sample)
+    print(sound.frame_rate)
+    exit()
+
     """ スペクトログラム作成 """
     w = 1000  # 窓枠
     s = 500  # 刻み
@@ -95,7 +100,7 @@ def conv(path):
     # plt.close()
     plt.clf()
 
-    crop(save_name)
+    # crop(save_name)
 
 
 def crop(save_path, crop_range=(138, 63, 518, 427)):
