@@ -46,7 +46,7 @@ The folder name is `filename` that without extension.
 
 <br>
 
-You can switch action(function) by changing value of `global_variable.py`.  
+You can switch action(function) by changing value of `global_variables.py`.  
 Basically, it can use, just switch `True` or `False`.
 
 Example, 
