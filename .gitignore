@@ -1,13 +1,2 @@
-wav/
-export/
-annotated/
-croped-imgs_before-annotated/
-
-spectrum-save-img/*/
-spectrum-save-img/*.py
-!spectrum-save-img/*.jpg
-
-__pycache__/
-_test/
-
-augmentation/**/*.jpg
+spectrum-img/
+wav_exp/

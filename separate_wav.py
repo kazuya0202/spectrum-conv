@@ -1,106 +1,73 @@
 import wave
-import struct
-import math
-import os
-import sys
+import numpy as np
 from scipy import int16, frombuffer
 
-export_dir = 'export'
 
+class SeparateWave:
+    def __init__(self):
+        self.ch = 0
+        self.width = 0
+        self.fr = 0
+        self.fn = 0
 
-def cut_wav(filename, time):
-    wav_file = f'{filename}.wav'
-    wr = wave.open(wav_file, 'r')
+    def cut_wav(self, path, cut_interval, shift_time):
+        data = None
+        with wave.open(path, 'r') as w:
+            self.ch = w.getnchannels()
+            self.width = w.getsampwidth()
+            self.fr = w.getframerate()
+            self.fn = w.getnframes()
+            data = w.readframes(w.getnframes())
 
-    ch = wr.getnchannels()
-    width = wr.getsampwidth()
-    fr = wr.getframerate()
-    fn = wr.getnframes()
-    total_time = 1.0 * fn / fr
-    integer = math.floor(total_time)
-    # t = int(time)
-    t = time
+        total_time = 1.0 * self.fn / self.fr
+        total_time_int = np.floor(total_time)
+        st = shift_time
+        # st = int(shift_time)
 
-    # フレームに応じて図の横幅が変わるため、一定値にする
-    frames = int(ch * fr * t)
+        # フレームに応じて図の横幅が変わるため、一定値にする
+        frames = int(self.ch * self.fr * st)
 
-    num_cut = int(integer // t)
+        num_cut = int(total_time_int // st)
 
-    print(f'channle: {ch}')
-    print(f'sample width: {width}')
-    print(f'frame rate: {fr}')
-    print(f'frame num: {fn}')
-    print(f'params: {wr.getparams()}')
-    print(f'total time: {total_time}')
-    print(f'total time(int): {integer}')
-    print(f'time: {t}')
-    print(f'frames: {frames}')
-    print(f'number of cut: {num_cut}')
+        # -- for debug
+        # print(f'channle: {self.ch}')
+        # print(f'sample width: {self.width}')
+        # print(f'frame rate: {self.fr}')
+        # print(f'frame num: {self.fn}')
+        # # print(f'params: {wr.getparams()}')
+        # print(f'total time: {total_time}')
+        # print(f'total time(int): {total_time_int}')
+        # print(f'cut time: {st}')
+        # print(f'frames: {frames}')
+        # print(f'number of cut: {num_cut}')
 
-    data = wr.readframes(wr.getnframes())
-    wr.close()
-    X = frombuffer(data, dtype=int16)
+        sample = frombuffer(data, dtype=int16)
+        end_condition = frames * num_cut
 
-    out_file_path = f'{export_dir}/{filename}'
-    if not os.path.exists(out_file_path):
-        os.makedirs(out_file_path)
+        # 実際の frames と変更するため注意
+        # => end_condition で配列外参照を防ぐ
+        frames = 10000  # 横幅を合わせるため
+        interval = cut_interval * 10
 
-    end_condition = frames * num_cut
+        for i in range(num_cut):
+            # print(i)
 
-    filename = os.path.basename(filename)
+            bgn = int(i * frames)
+            end = int((i + interval) * frames)
+            # end = (i + 11) * frames
+            """
+                (i + 10) => 1 sec.
 
-    frames = 10000  # 横幅を合わせるための
-    for i in range(num_cut):
-        print(i)
+                画像的に真四角にならないから
+                (i + 11) => 1 + N sec.
+            """
 
-        out_file = f'{out_file_path}/{filename}_{i}.wav'
-        start_cut = i * frames
-        end_cut = (i + 10) * frames
-        # end_cut = (i + 10) * frames + frames
-        # print(start_cut, end_cut)
-        # print()
+            # frame を超えたら None
+            if end >= end_condition:
+                # print('  over frames')
+                return None
 
-        if end_cut > end_condition:
-            print('  over frames')
-            return
+            wav_data = sample[bgn:end]
 
-        Y = X[start_cut:end_cut]
-        out_date = struct.pack('h' * len(Y), *Y)
-
-        # output
-        with wave.open(out_file, 'w') as ww:
-            ww.setnchannels(ch)
-            ww.setsampwidth(width)
-            ww.setframerate(fr)
-            ww.writeframes(out_date)
-
-
-def main(path='crossing1'):
-    argv = sys.argv
-    isfile = False
-
-    if len(argv) >= 2:
-        path = argv[1]
-
-    if path.find('.') > -1:
-        isfile = True
-        path = path[:path.find('.')]
-    print(path)
-
-    if not os.path.exists(f'{export_dir}/{path}'):
-        os.makedirs(f'{export_dir}/{path}')
-
-    cut_time = 0.1
-
-    # if os.path.isfile(path):
-    if isfile:
-        cut_wav(path, cut_time)
-
-    else:
-        for (root, dirs, files) in os.walk(path):
-            for f in files:
-                cut_wav(f'{root}{os.path.splitext(f)[0]}', cut_time)
-
-
-if __name__ == '__main__':
-    main()
+            # generator
+            yield wav_data

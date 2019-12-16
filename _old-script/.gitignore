@@ -1,0 +1,9 @@
+wav/
+export/
+
+spectrum-save-img/*/
+spectrum-save-img/*.py
+!spectrum-save-img/*.jpg
+
+**/__pycache__/
+**/*.jpg

@@ -1,140 +1,188 @@
-from pydub import AudioSegment
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import os
-import sys
-import glob
-from PIL import Image
-
-target_dir = 'spectrum-save-img'
+from global_variables import GlobalVariables
 
 
-def conv(path):
-    ext = os.path.splitext(path)[1]
+class SpectrumConversion:
+    def __init__(self, plt_conf=None):
+        self.gv = GlobalVariables()
 
-    # read file
-    sound = AudioSegment.from_file(path, ext)
+        # # プロットの設定
+        self.plt_conf = {
+            'x': False,
+            'y': False,
+            'cbar': False,
+            'cmap': plt.cm.gist_rainbow_r,
+            'vmin': -1,
+            'square': True
+        }
 
-    # parameters
-    # print(f'channels   = {sound.channels}')
-    # print(f'frame_rate = {sound.frame_rate}')
-    # print(f'duration   = {sound.duration_seconds}')
+        if plt_conf is not None:
+            self.plt_conf = plt_conf
 
-    # sample
-    samples = np.array(sound.get_array_of_samples())
-    sample = samples[::sound.channels]
+    def conv_and_plot(self, sound):
+        sample = sound._data
 
-    print(len(sample))
-    print(sample)
-    print(sound.frame_rate)
-    exit()
+        """ スペクトログラム作成 """
+        w = 1024  # 窓枠
+        s = 512   # 刻み
 
-    """ スペクトログラム作成 """
-    w = 1000  # 窓枠
-    s = 500  # 刻み
+        ampList = []  # スペクトル格納用
+        argList = []  # 偏角格納用
 
-    ampList = []  # スペクトル格納用
-    argList = []  # 偏角格納用
+        i = None
+        data = None
 
-    i = None
-    data = None
+        # 刻みずつずらしながら窓幅分のデータをフーリエ変換
+        for i in range(int((sample.shape[0] - w) / s)):
+            data = sample[i * s:i * s + w]
+            spec = np.fft.fft(data)
+            spec = spec[:int(spec.shape[0] / 2)]
+            spec[0] /= 2
+            ampList.append(np.abs(spec))
+            argList.append(np.angle(spec))
 
-    # 刻みずつずらしながら窓幅分のデータをフーリエ変換
-    for i in range(int((sample.shape[0] - w) / s)):
-        data = sample[i * s:i * s + w]
-        spec = np.fft.fft(data)
-        spec = spec[:int(spec.shape[0] / 2)]
-        spec[0] = spec[0] / 2
-        ampList.append(np.abs(spec))
-        argList.append(np.angle(spec))
+        # 周期数は共通なので1回だけ計算（縦軸表示に使う）
+        freq = np.fft.fftfreq(data.shape[0], 1.0 / sound.frame_rate)
+        freq = freq[:int(freq.shape[0] / 2)]
 
-    # 周期数は共通なので1回だけ計算（縦軸表示に使う）
-    freq = np.fft.fftfreq(data.shape[0], 1.0 / sound.frame_rate)
-    freq = freq[:int(freq.shape[0] / 2)]
+        # 時間も共通なので1回だけ計算（横軸表示に使う）
+        time = np.arange(0, i + 1, 1) * s / sound.frame_rate
 
-    # 時間も共通なので1回だけ計算（横軸表示に使う）
-    time = np.arange(0, i + 1, 1) * s / sound.frame_rate
+        # numpyの配列にする
+        ampList = np.array(ampList)
+        argList = np.array(argList)
 
-    # numpyの配列にする
-    ampList = np.array(ampList)
-    argList = np.array(argList)
+        # seaborn の heatmap を使う
+        plt_data = pd.DataFrame(data=ampList, index=time, columns=freq)
 
-    """ matplotlib と seaborn でスペクトログラムを可視化 """
-    df_amp = pd.DataFrame(data=ampList, index=time, columns=freq)
+        # plot config
+        xticklabels = self.plt_conf['x']
+        yticklabels = self.plt_conf['y']
+        cmap = self.plt_conf['cmap']
+        vmin = self.plt_conf['vmin']
+        cbar = self.plt_conf['cbar']
+        square = self.plt_conf['square']
 
-    # プロットサイズ変更
-    # plt.figure(figsize=(20, 6))
+        sns.heatmap(data=np.log(plt_data.iloc[:, :100].T),
+                    xticklabels=xticklabels,
+                    yticklabels=yticklabels,
+                    cmap=cmap,
+                    vmin=vmin,
+                    cbar=cbar,
+                    square=square)
 
-    # seaborn の heatmap を使う
-    sns.heatmap(data=np.log(df_amp.iloc[:, :100].T),
-                # xticklabels=100,
-                # yticklabels=10,
-                xticklabels=False,
-                yticklabels=False,
-                cmap=plt.cm.gist_rainbow_r,
-                vmin=-1,
-                cbar=False,
-                square=True  # 1秒ごとにするときに都合がいい
-                )
-    # save
+        # プロットした図を保存
+        plt_fig = plt.gcf()
 
-    # 1階層上のフォルダ名を取得
-    p = os.path.dirname(path)
-    parent_dir = p[p.rfind('/') + 1:]
+        # 軸を見やすくする
+        self.change_axis_range()
 
-    save_path = f'{target_dir}/{parent_dir}'
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+        # 表示するかどうか
+        if self.gv.plt_show_img:
+            plt.show()
 
-    # ファイル名のみを取得
-    fname = os.path.basename(path)
-    fname = fname[:fname.rfind('.')]
+        if self.gv.plt_show_pause:
+            plt.pause(self.gv.plt_pause_interval)
 
-    save_name = f'{save_path}/{fname}.jpg'
-    plt.savefig(save_name)
-    print(f"Save to '{save_name}'")
+        return plt_fig
 
-    # plt.close()
-    plt.clf()
+        # ax.set_xticklabels(xs)
+        # ax.set_yticklabels(ys)
+        # ax.set_xticklabels('{}'.format(str(x)) for x in xs)
+        # ax.set_yticklabels(['{:,.2%}'.format(x) for x in ])
 
-    # crop(save_name)
+        # for v in vals:
+        # import matplotlib.ticker as ticker
+        # ax.get_xaxis().get_major_formatter().set_useOffset(False)
+        # ax.get_xaxis().set_major_locator(ticker.MaxNLocator(integer=True))
 
+        # xs = [x.get_text() for x in plt.xticks()[1]]
+        # ys = [y.get_text() for y in plt.yticks()[1]]
 
-def crop(save_path, crop_range=(138, 63, 518, 427)):
-    """ 画像を切り取る """
+        # print(xs)
 
-    img = Image.open(save_path)  # 保存
-    img_crop = img.crop(crop_range)  # 切り取り
-    img_crop.save(save_path)  # 保存
+        # xs = [(float(x)) for x in xs]
+        # ys = [(float(y)) for y in ys]
 
+        # xxs = np.linspace(min(xs), max(xs), 11)
+        # yys = np.linspace(min(ys), max(ys), 11)
 
-def main(path=None):
-    default = 'crossing1.wav'
-    argv = sys.argv
+        # xticks = plt.xticks()
+        # print(type(xticks[0]))
+        # print(type(xticks[1]))
+        # # print(xticks[1])
+        # for x in xticks[1]:
+        #     print(x)
 
-    if path is None:
-        path = default
+        # ax.xaxis.set_ticks(xxs)
+        # ax.yaxis.set_ticks(yys)
+        # ax.xaxis.set_ticks(['{:.2f}'.format(x) for x in xxs])
+        # ax.yaxis.set_ticks(['{:.2f}'.format(x) for x in yys])
+        # plt.xticks(np.arange(min(xxs), max(xxs), 10))
+        # plt.yticks(np.arange(min(yys), max(yys), 10))
+        # plt.ylim(min(yys), max(yys))
+        # plt.xlim(min(xxs), max(xxs))
 
-        # 引数があるなら
-        if len(argv) >= 2:
-            path = argv[1]
+        # ticks0 = []
+        # # ticks1 = []
+        # ticks1 = plt.cbook.silent_list()
+        # for i, x in enumerate(xxs):
+        #     p = i * 10
+        #     ticks0.append(p)
+        #     ticks1.append(plt.Text(p, 0, x))
 
-    # ファイルなら
-    if os.path.isfile(path):
-        conv(path)
-    # ディレクトリ
-    else:
-        for file_path in glob.glob(f'{path}/*'):
-            # ディレクトリの中にディレクトリがあるなら
-            if os.path.isdir(file_path):
-                for file in glob.glob(f'{file_path}/*'):
-                    conv(file)
-            # conv(f'{root}/{f}')
-            conv(file_path)
+        # ticks0 = np.array(ticks0)
+        # print(type(ticks1))
+        # # for a in ticks1:
+        # #     print(a)
+        # plt.xticks([ticks0, ticks1])
+        # plt.yticks(yys)
 
+        # plt.xticks(np.arange(len(xxs)), xxs)
+        # plt.yticks(np.arange(len(yys)), yys)
+        # ax.set(xticks=xxs, yticks=yys)
 
-if __name__ == '__main__':
-    main()
+        # from matplotlib import ticker
+        # ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
+        # ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
+
+        # ticks = 10
+        # plt.xticks(range(0, len(plt_data), ticks), plt_data[::ticks])
+
+    def change_axis_range(self):
+        chk_list = [
+            self.plt_conf['x'],
+            self.plt_conf['y'],
+            self.plt_conf['cbar']
+        ]
+
+        if any(chk_list):
+            """ MEMO
+            時間軸（X）はファイルが長いのに対応できてないから
+            調整いるかも
+            """
+            # 軸の目盛りを調整する
+            def fill_label(labels, interval):
+                """ 表示間隔を変更 """
+                for i, label in enumerate(labels):
+                    if (i % interval == 0):
+                        txt = label.get_text()
+                        labels[i] = txt[:txt.find('.') + 3]
+                    else:
+                        labels[i] = ''
+                return labels
+
+            # 各軸のラベルを取得
+            x_labels = plt.xticks()[1]
+            y_labels = plt.yticks()[1]
+
+            X = fill_label(x_labels, self.gv.plt_xtick_interval)
+            Y = fill_label(y_labels, self.gv.plt_ytick_interval)
+
+            # 変更したラベルを設定
+            plt.xticks(ticks=np.arange(len(X)), labels=X, rotation=90)
+            plt.yticks(ticks=np.arange(len(Y)), labels=Y)

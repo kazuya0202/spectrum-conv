@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 import utils as ul
-from spectrum_conv import SpectrumConvertion
+from spectrum_conv import SpectrumConversion
 from global_variables import GlobalVariables
 from separate_wav import SeparateWave
 from audio_augment import AudioAugmentation
@@ -16,7 +16,7 @@ class Main:
 
         plt_conf = self.determine_plot_config()
 
-        self.sc = SpectrumConvertion(plt_conf=plt_conf)
+        self.sc = SpectrumConversion(plt_conf=plt_conf)
         self.sw = SeparateWave()
         self.aa = AudioAugmentation()
 
@@ -34,26 +34,24 @@ class Main:
         # プロットされた図のデータ
         self.plt_fig = None
 
-    def save_datas(self, plt_fig=None, wav_data=None, append_str=''):
+    def save_datas(self, plt_fig=None, wav_data=None, exp_path=''):
         """[summary]
 
         Args:
             plt_fig ([type], optional): [description]. Defaults to None.
             wav_data ([type], optional): [description]. Defaults to None.
-            append_str (str, optional): ファイル名の末尾に追加する文字列（連番）. Defaults to ''.
+            exp_path (str, optional): ファイル名の末尾に追加する文字列（連番）. Defaults to ''.
         """
 
-        fname = self.path.stem
-        # img_path = None
-        # wav_path = None
+        # 拡張子の切り分け
+        exp_path = str(Path(exp_path).stem)
 
         if self.gv.is_save_img or self.gv.is_save_wav:
             print('\nSave to:')
 
         # --- save img ---
         if plt_fig is not None:
-            jpg_name = f'{fname}{append_str}.jpg'
-
+            jpg_name = f'{exp_path}.jpg'
             img_path = self.img_exp_dir.joinpath(jpg_name)
 
             plt_fig.savefig(str(img_path))
@@ -69,7 +67,7 @@ class Main:
         if self.gv.is_separate and self.gv.is_save_wav:
             if wav_data is not None:
 
-                wav_name = f'{fname}{append_str}.wav'
+                wav_name = f'{exp_path}.wav'
                 wav_path = self.wav_exp_dir.joinpath(wav_name)
 
                 # separate するときに読み込んだ元のデータの値で書き出す
@@ -182,8 +180,9 @@ class Main:
                     # conv, plot, save
                     plt_fig = self.sc.conv_and_plot(sound)
 
-                    append_str = f'_{it}'
-                    _ = self.save_datas(plt_fig, wav_data, append_str)
+                    # append_str = f'_{it}'
+                    exp_path = f'{self.path.stem}_{it}'
+                    _ = self.save_datas(plt_fig, wav_data, exp_path)
             else:
                 # 引数のファイルをそのまま変換する場合
 
@@ -192,7 +191,9 @@ class Main:
 
                 # conv, plot, save
                 plt_fig = self.sc.conv_and_plot(sound)
-                _ = self.save_datas(plt_fig=plt_fig)
+
+                exp_path = f'{self.path.stem}'
+                _ = self.save_datas(plt_fig=plt_fig, exp_path=exp_path)
                 # continue
 
             # clear cache
@@ -209,7 +210,7 @@ class Main:
             num = ((_max - _min) // step) + 1
             noise_range = np.linspace(_min, _max, num)[1:]
 
-            append_str_base = f'_{it}'
+            # append_str_base = f'_{it}'
 
             """ White Noise """
             for i, ratio in enumerate(noise_range):
@@ -229,8 +230,8 @@ class Main:
                 # conv, plot, save
                 plt_fig = self.sc.conv_and_plot(sound)
 
-                append_str = f'{append_str_base}_noise{i}'
-                _ = self.save_datas(plt_fig, augmented_data, append_str)
+                exp_path = f'{self.path.stem}_it_noise{i}'
+                _ = self.save_datas(plt_fig, augmented_data, exp_path)
 
             # change speed, stretch (?= change pitch)
             """  """

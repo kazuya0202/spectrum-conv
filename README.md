@@ -1,102 +1,110 @@
-# Spectrum-conv
+# Spectrum Conversion for Sound Recognition
 
-### ◆ パッケージ・モジュール
+## Requirements
 
-```bash
-$ pip install -r requirements.txt
+### Install Packages / Modules
+
+```sh
+$ pip install -r requirments.txt
 ```
+
 + pydub
 + numpy
 + pandas
 + matplotlib
 + seaborn
++ scipy
++ Pillow
++ librosa
 
 <br>
 
-### ◆ 実行
+## Usage
 
-※ デフォルトでは`crossing1.wav`が指定されている
+### Exec Script
 
-```bash
-$ python spectrum-conv.py
-```
++ Default
 
-<br>
+  ```sh
+  $ python main.py <wav_path>
+  ```
 
-+ ファイルを指定する場合
++ Specify multi wave files
 
-```bash
-$ python spectrum-conv.py {wavファイル}
-```
-
-+ ディレクトリを指定する場合
-
-```bash
-$ python spectrum-conv.py {wavファイルのディレクトリ}
-```
+  ```sh
+  $ python main.py <wav1_path> <wav2_path> ...
+  # or 
+  $ python main.py *.wav
+  ```
 
 <br>
 
-### ◆ 出力結果
+### Details
 
-+ crossing1.wav - result
-![crossing1.jpg](https://github.com/kazuya0202/spectrum-conv/blob/master/spectrum-save-img/crossing1_001.jpg)
-
-+ cat1.wav - result
-  ![cat.1jpg](https://github.com/kazuya0202/spectrum-conv/blob/master/spectrum-save-img/cat1_001.jpg)
+When you exec script, it will create a folder. And a plotted image, or a spectrogram image is saved in the folder.  
+The folder name is `filename` that without extension.
 
 <br>
 
----
+You can switch action(function) by changing value of `global_variable.py`.  
+Basically, it can use, just switch `True` or `False`.
+
+Example, 
+
+1. save images or waves.
+
+   ```python
+   # If you want to save images, it is True.
+   self.is_save_img = True
+   
+   # If you want to save waves, it is True.
+   self.is_save_wav = True
+   ```
+
+2. separate wave data every one second.
+
+   ```python
+   self.is_separate = True
+   ```
+
+3. crop image (for using as learning data).
+
+   ```python
+   self.is_crop = True
+   ```
+
+4. show spectrogram on window.
+
+   ```python
+   # You should specify which one.
+   
+   # If you want to show spectrogram images one by one, it is True.
+   # In this case, you have to close a window and next spectrogram images will showed.
+   self.plt_show_img = True
+   
+   # If you want to show spectrogram images continuously, it is True.
+   # In this case, you do not have to close a window.
+   self.plt_show_pause = True
+   ```
+
+5. show X and Y axes.
+
+   ```python
+   self.plt_conf = {
+   	'xy': True,
+       # ...
+   }
+   ```
+
+6. show color bar.
+
+   ```python
+   self.plt_conf = {
+   	'cbar': True,
+       # ...
+   }
+   ```
 
 <br>
 
-### ◆ separate_wav.py
-
-wavファイルを1秒間隔で、0.1秒ずつずらしながら分割保存する。
-
-```bash
-$ python separate-wav.py {wavファイル}
-$ python separate-wav.py {wavファイルのディレクトリ}
-```
-
->  出力先：`export/`
-
-<br>
-
-+ ファイルを指定する場合
-
-  + ファイル名（拡張子なし）のフォルダが作られ保存される。
-
-    ```bash
-    # 例
-    $ python separate-wav.py audio.wav
-    
-    # => export/audio/audio_0.wav
-    # => export/audio/audio_1.wav ...
-    ```
-
-+ ディレクトリを指定する場合
-
-  + ディレクトリ / ファイル名のフォルダが作られ保存される。
-
-    ```bash
-    # 例
-    $ python separate-wav.py data/
-    
-    # => export/data/audio1/audio_0.wav
-    # => export/data/audio1/audio_1.wav ...
-    ```
-
-    > data/
-    >     audio1.wav
-    >     audio2.wav
-    >     ...
-
-<br>
-
-### ◆ run_conv.py
-
-分割保存したデータをスペクトログラムに変換する。（内部で`spectrum-conv.py`を実行する）
-
-+ `separate-wav.py`と同じ引数を渡す。（自動的に`export/`内の分割ファイルを参照する）
+**Note:** When you specified wave files were not `.wav`, their files are ignored automatically.

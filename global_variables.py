@@ -12,7 +12,7 @@ class GlobalVariables:
         # => separate しないのに保存はしない
 
         # wav を1秒ごとに切り分けるかどうか
-        self.is_separate = True
+        self.is_separate = False
 
         # 切り取るかどうか
         self.is_crop = True
@@ -26,7 +26,7 @@ class GlobalVariables:
         self.is_learning_data = False
 
         # 増幅するかどうか (unimplemented)
-        self.is_audio_augment = True
+        self.is_audio_augment = False
 
         # librosa 使えるならもっと？
         self.aa_exec_whitenoise = False
@@ -113,6 +113,10 @@ class GlobalVariables:
             - conf['xy']
             - None (inplemented)
         """
+
+        # uninplemented
+        # self.img_ext = 'jpg'
+        # self.audio_ext = 'wav'
 
         """ AUGMENTATION """
         # 1000 ~ 4000
