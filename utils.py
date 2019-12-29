@@ -14,7 +14,7 @@ def has_elems_in_list(_list, elms):
 
 
 def load_wav(wav_path):
-    """ wavファイルを読み込む """
+    """ wavファイルを読み込む (audiosegment) """
 
     # 読み込み
     sound = AudioSegment.from_wav(wav_path)

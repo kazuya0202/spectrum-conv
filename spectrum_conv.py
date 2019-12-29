@@ -3,14 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from global_variables import GlobalVariables
-
 
 class SpectrumConversion:
     def __init__(self, plt_conf=None):
-        self.gv = GlobalVariables()
-
-        # # プロットの設定
+        # プロットの設定
         self.plt_conf = {
             'x': False,
             'y': False,
@@ -78,16 +74,6 @@ class SpectrumConversion:
         # プロットした図を保存
         plt_fig = plt.gcf()
 
-        # 軸を見やすくする
-        self.change_axis_range()
-
-        # 表示するかどうか
-        if self.gv.plt_show_img:
-            plt.show()
-
-        if self.gv.plt_show_pause:
-            plt.pause(self.gv.plt_pause_interval)
-
         return plt_fig
 
         # ax.set_xticklabels(xs)
@@ -153,36 +139,30 @@ class SpectrumConversion:
         # ticks = 10
         # plt.xticks(range(0, len(plt_data), ticks), plt_data[::ticks])
 
-    def change_axis_range(self):
-        chk_list = [
-            self.plt_conf['x'],
-            self.plt_conf['y'],
-            self.plt_conf['cbar']
-        ]
+    def change_axis_range(self, xtick_interval=1, ytick_interval=1):
+        """ MEMO
+        時間軸（X）はファイルが長いのに対応できてないから
+        調整いるかも
+        """
 
-        if any(chk_list):
-            """ MEMO
-            時間軸（X）はファイルが長いのに対応できてないから
-            調整いるかも
-            """
-            # 軸の目盛りを調整する
-            def fill_label(labels, interval):
-                """ 表示間隔を変更 """
-                for i, label in enumerate(labels):
-                    if (i % interval == 0):
-                        txt = label.get_text()
-                        labels[i] = txt[:txt.find('.') + 3]
-                    else:
-                        labels[i] = ''
-                return labels
+        # 軸の目盛りを調整する
+        def fill_label(labels, interval):
+            """ 表示間隔を変更 """
+            for i, label in enumerate(labels):
+                if (i % interval == 0) or ((len(labels) - 1) == i):
+                    txt = label.get_text()
+                    labels[i] = txt[:txt.find('.') + 3]
+                else:
+                    labels[i] = ''
+            return labels
 
-            # 各軸のラベルを取得
-            x_labels = plt.xticks()[1]
-            y_labels = plt.yticks()[1]
+        # 各軸のラベルを取得
+        x_labels = plt.xticks()[1]
+        y_labels = plt.yticks()[1]
 
-            X = fill_label(x_labels, self.gv.plt_xtick_interval)
-            Y = fill_label(y_labels, self.gv.plt_ytick_interval)
+        X = fill_label(x_labels, xtick_interval)
+        Y = fill_label(y_labels, ytick_interval)
 
-            # 変更したラベルを設定
-            plt.xticks(ticks=np.arange(len(X)), labels=X, rotation=90)
-            plt.yticks(ticks=np.arange(len(Y)), labels=Y)
+        # 変更したラベルを設定
+        plt.xticks(ticks=np.arange(len(X)), labels=X, rotation=90)
+        plt.yticks(ticks=np.arange(len(Y)), labels=Y)
