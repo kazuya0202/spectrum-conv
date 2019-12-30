@@ -8,13 +8,13 @@ class GlobalVariables:
         self.is_crop = True         # 余白を切り取るかどうか
 
         # 保存するかどうか
-        self.is_save_img = True   # 画像
+        self.is_save_img = False   # 画像
         self.is_save_wav = False   # 切り分けた wav
 
         # 増幅したデータを保存するかどうか
         # （↑が False なら True でも保存しない）
-        self.is_save_augmented_img = True
-        self.is_save_augmented_wav = False
+        # self.is_save_augmented_img = True
+        # self.is_save_augmented_wav = False
 
         # plot config
         self.plt_conf = {
@@ -62,6 +62,7 @@ class GlobalVariables:
         """ AUDIO AUGMENTATION """
         # 500 ~ 2000
         self.whitenoise_range = [500, 2000]     # ノイズの範囲
+        # self.whitenoise_range = 1000  # only one time
         # step by 500
         self.whitenoise_step = 500      # 段階
 

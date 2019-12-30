@@ -6,7 +6,7 @@ class AudioAugmentation:
     def __init__(self):
         pass
 
-    def append_white_noise(self, data, noise_ratio=4000):
+    def append_white_noise(self, data, noise_ratio=1000):
         """
         ホワイトノイズ付加
         """

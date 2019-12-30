@@ -124,3 +124,6 @@ class SeparateWave:
         samples = np.array(self.sound.get_array_of_samples())
         sample = samples[::self.sound.channels]
         self.sound._data = sample
+
+        # wave, audiosegmentの整合性
+        self.data = sample

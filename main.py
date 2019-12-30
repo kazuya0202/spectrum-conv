@@ -1,7 +1,7 @@
 import sys
 import matplotlib.pyplot as plt
-from pathlib import Path
 import numpy as np
+from pathlib import Path
 
 # my packages
 import utils as ul
@@ -32,13 +32,15 @@ class Main:
         self.wav_exp_dir = Path('')
         self.img_exp_dir = Path('')
 
-        # save config
-        if not self.gv.is_save_img:
-            self.gv.is_save_augmented_img = False
-        if not self.gv.is_save_wav:
-            self.gv.is_save_augmented_wav = False
+        self.exp_name = ''
 
-    def save_datas(self, plt_fig=None, wav_data=None, exp_path=''):
+        # save config
+        # if not self.gv.is_save_img:
+        #     self.gv.is_save_augmented_img = False
+        # if not self.gv.is_save_wav:
+        #     self.gv.is_save_augmented_wav = False
+
+    def save_datas(self, plt_fig, wav_data, exp_path):
         """[summary]
 
         Args:
@@ -127,9 +129,10 @@ class Main:
     def process_argv(self, argv):
         if ul.has_elems_in_list(argv, ['-h', '--help']):
             print('Usage:')
-            print('  python <this-file>.py **/*.wav')
             print('  python <this-file>.py <audio_file>.wav')
+            print('  python <this-file>.py **/*.wav')
             print('  python <this-file>.py')
+            print('    => Enter file path on console.')
             exit()
 
         if ul.has_elems_in_list(argv, ['-t', '--test']):
@@ -143,32 +146,60 @@ class Main:
 
         # remove <script>.py to ignore
         argv.remove(argv[0])
-
         return argv
 
-    def convert(self, sound):
-        plt_fig = self.sc.conv_and_plot(sound)
-        is_show = any([self.gv.plt_show_img, self.gv.plt_show_pause])
+    def flow(self, wav_data, exp_path=None, from_augment=False):
+        """ series of flow
 
-        if self.gv.plt_conf['xy'] and is_show:
-            # 軸を見やすくする
-            self.sc.change_axis_range(
-                xtick_interval=self.gv.plt_xtick_interval,
-                ytick_interval=self.gv.plt_ytick_interval)
+        Args:
+            wav_data ([type]): wave data
+            exp_path ([type], optional): export path. Defaults to None.
+            from_augment (bool, optional): whether it is from function of augment. Defaults to False.
+        """
+        # wave_data
+        #     => convert, plot, save
 
-        # 表示するかどうか
-        if self.gv.plt_show_img:
-            plt.show()
+        def convert(sound):
+            plt_fig = self.sc.conv_and_plot(sound)
+            is_show = any([self.gv.plt_show_img, self.gv.plt_show_pause])
 
-        if self.gv.plt_show_pause:
-            plt.pause(self.gv.plt_pause_interval)
+            if self.gv.plt_conf['xy'] and is_show:
+                # 軸を見やすくする
+                self.sc.change_axis_range(
+                    xtick_interval=self.gv.plt_xtick_interval,
+                    ytick_interval=self.gv.plt_ytick_interval)
 
-        return plt_fig
+            # 表示するかどうか
+            if self.gv.plt_show_img:
+                plt.show()
+
+            if self.gv.plt_show_pause:
+                plt.pause(self.gv.plt_pause_interval)
+
+            return plt_fig
+
+        if exp_path is None:
+            exp_path = self.exp_name
+
+        # convert numpy to AudioSegment
+        self.sw.data = wav_data
+        self.sw.numpy2AudioSegment()
+
+        # conv, plot, save
+        plt_fig = convert(self.sw.sound)
+
+        x = plt_fig if self.gv.is_save_img else None
+        y = wav_data if self.gv.is_save_wav else None
+        self.save_datas(x, y, exp_path)
+
+        # audio augmentation
+        if not from_augment and self.gv.is_audio_augment:
+            self.augment(wav_data, base_exp_path=exp_path)
 
     def main(self):
         argv = self.process_argv(sys.argv)
 
-        for i, wav_file in enumerate(argv):
+        for _, wav_file in enumerate(argv):
             self.path = Path(wav_file)
 
             # 存在しないなら continue
@@ -183,12 +214,14 @@ class Main:
 
             # 保存先を決定
             self.determine_save_path()
+
+            # base of name when save
+            self.exp_name = self.path.stem
+
             self.sw = SeparateWave(str(self.path), load_wave=True)
 
             if self.gv.is_separate:
                 # 切り分けて処理
-
-                # generator
                 params = [self.gv.cut_interval, self.gv.shift_time]
                 separated_waves = self.sw.separate_wav(*params)
 
@@ -197,74 +230,59 @@ class Main:
                     if wav_data is None:
                         break
 
-                    # convert numpy to AudioSegment
-                    self.sw.data = wav_data
-                    self.sw.numpy2AudioSegment()
-
-                    # conv, plot, save
-                    plt_fig = self.convert(self.sw.sound)
-
-                    exp_path = f'{self.path.stem}_{it}'
-
-                    x = plt_fig if self.gv.is_save_img else None
-                    y = wav_data if self.gv.is_save_wav else None
-                    self.save_datas(x, y, exp_path)
-
-                    # audio augmentation
-                    if self.gv.is_audio_augment:
-                        self.augment(wav_data, base_exp_path=exp_path)
-
+                    exp_path = f'{self.exp_name}_{it}'
+                    self.flow(wav_data, exp_path)
             else:
                 # 引数のファイルをそのまま変換する場合
-
-                self.sw.numpy2AudioSegment()
-
-                # conv, plot, save
-                plt_fig = self.convert(self.sw.sound)
-
-                exp_path = f'{self.path.stem}'
-
-                x = plt_fig if self.gv.is_save_img else None
-                y = None    # original file -> do not save
-                self.save_datas(x, y, exp_path)
-
-                # audio augmentation
-                if self.gv.is_audio_augment:
-                    self.augment(self.sw.sound._data, base_exp_path=exp_path)
+                exp_path = self.exp_name
+                self.flow(self.sw.data, exp_path)
 
         return 0
 
     def augment(self, data, base_exp_path):
-        """ White Noise """
+        def augment_whitenoise(data, ratio):
+            """ White Noise """
+            params = data, ratio
+            augmented_data = self.aa.append_white_noise(*params)
+
+            # # convert numpy to AudioSegment
+            exp_path = f'{base_exp_path}_noise[{int(ratio)}]'
+            self.flow(augmented_data, exp_path, from_augment=True)
+
+            # self.sw.data = augmented_data
+            # self.sw.numpy2AudioSegment()
+
+            # # conv, plot, save
+            # plt_fig = self.convert(self.sw.sound)
+            # exp_path = f'{base_exp_path}_noise[{int(ratio)}]'
+
+            # x = plt_fig if self.gv.is_save_augmented_img else None
+            # y = augmented_data if self.gv.is_save_augmented_wav else None
+            # self.save_datas(x, y, exp_path)
+
+        # augment
         if self.gv.aa_exec_whitenoise:
-            _max = max(self.gv.whitenoise_range)
-            _min = min(self.gv.whitenoise_range)
-            step = self.gv.whitenoise_step
+            _range = self.gv.whitenoise_range
 
-            num = ((_max - _min) // step) + 1
-            noise_range = np.linspace(_min, _max, num)
+            # not list
+            if not isinstance(_range, list):
+                augment_whitenoise(data, _range)
+            else:
+                step = self.gv.whitenoise_step
+                _max = max(_range)
+                _min = min(_range)
+                num = ((_max - _min) // step) + 1
 
-            # remove 0
-            # 0 noise -> same as original data
-            if _min == 0:
-                noise_range = noise_range[1:]
+                noise_range = np.linspace(_min, _max, num)
 
-            for _, ratio in enumerate(noise_range):
-                # append white noise
-                params = [data, ratio]
-                augmented_data = self.aa.append_white_noise(*params)
+                for _, ratio in enumerate(noise_range):
+                    # ignore original
+                    if ratio == 0:
+                        continue
 
-                # convert numpy to AudioSegment
-                self.sw.data = augmented_data
-                self.sw.numpy2AudioSegment()
-
-                # conv, plot, save
-                plt_fig = self.convert(self.sw.sound)
-                exp_path = f'{base_exp_path}_noise[{int(ratio)}]'
-
-                x = plt_fig if self.gv.is_save_augmented_img else None
-                y = augmented_data if self.gv.is_save_augmented_wav else None
-                self.save_datas(x, y, exp_path)
+                    # append white noise
+                    # params = [data, ratio]
+                    augment_whitenoise(data, ratio)
 
         # another augmentation
 
