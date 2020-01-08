@@ -14,23 +14,14 @@ from audio_augment import AudioAugmentation
 class Main:
     def __init__(self):
         self.gv = GlobalVariables()
-
-        plt_conf = self.determine_plot_config(self.gv.plt_conf)
-
-        self.sc = SpectrumConversion(plt_conf=plt_conf)
-        self.aa = AudioAugmentation()
-        self.sw = SeparateWave(None)    # temporary
+        self.sw = SeparateWave(None)    # temporary argument
 
         # wav ファイルのパス
-        self.path = Path('')
-
-        # 出力先のベース
-        self.wav_exp_base = Path(self.gv.wav_exp_dir)
-        self.img_exp_base = Path(self.gv.img_exp_dir)
+        self.path = Path()
 
         # 出力先のディレクトリ
-        self.wav_exp_dir = Path('')
-        self.img_exp_dir = Path('')
+        self.wav_exp_dir = Path()
+        self.img_exp_dir = Path()
 
         self.exp_name = ''
 
@@ -93,9 +84,13 @@ class Main:
         #         or self.gv.is_save_augmented_wav:
         #         stem += '-augmented'
 
+        # 出力先のベース
+        wav_exp_base = Path(self.gv.wav_exp_dir)
+        img_exp_base = Path(self.gv.img_exp_dir)
+
         # save path
-        self.img_exp_dir = self.img_exp_base.joinpath(parent)
-        self.wav_exp_dir = self.wav_exp_base.joinpath(parent)
+        self.img_exp_dir = img_exp_base.joinpath(parent)
+        self.wav_exp_dir = wav_exp_base.joinpath(parent)
 
         # child dir
         if self.gv.is_separate:
@@ -160,12 +155,15 @@ class Main:
         #     => convert, plot, save
 
         def convert(sound):
-            plt_fig = self.sc.conv_and_plot(sound)
+            plt_conf = self.determine_plot_config(self.gv.plt_conf)
+            sc = SpectrumConversion(plt_conf=plt_conf)
+
+            plt_fig = sc.conv_and_plot(sound)
             is_show = any([self.gv.plt_show_img, self.gv.plt_show_pause])
 
             if self.gv.plt_conf['xy'] and is_show:
                 # 軸を見やすくする
-                self.sc.change_axis_range(
+                sc.change_axis_range(
                     xtick_interval=self.gv.plt_xtick_interval,
                     ytick_interval=self.gv.plt_ytick_interval)
 
@@ -199,7 +197,7 @@ class Main:
     def main(self):
         argv = self.process_argv(sys.argv)
 
-        for _, wav_file in enumerate(argv):
+        for wav_file in argv:
             self.path = Path(wav_file)
 
             # 存在しないなら continue
@@ -240,21 +238,15 @@ class Main:
         return 0
 
     def augment(self, data, base_exp_path):
+        aa = AudioAugmentation()
+
         def augment_whitenoise(data, ratio):
             """ White Noise """
             params = data, ratio
-            augmented_data = self.aa.append_white_noise(*params)
+            augmented_data = aa.append_white_noise(*params)
 
-            # # convert numpy to AudioSegment
             exp_path = f'{base_exp_path}_noise[{int(ratio)}]'
             self.flow(augmented_data, exp_path, from_augment=True)
-
-            # self.sw.data = augmented_data
-            # self.sw.numpy2AudioSegment()
-
-            # # conv, plot, save
-            # plt_fig = self.convert(self.sw.sound)
-            # exp_path = f'{base_exp_path}_noise[{int(ratio)}]'
 
             # x = plt_fig if self.gv.is_save_augmented_img else None
             # y = augmented_data if self.gv.is_save_augmented_wav else None

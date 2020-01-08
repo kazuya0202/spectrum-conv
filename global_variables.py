@@ -8,8 +8,8 @@ class GlobalVariables:
         self.is_crop = True         # 余白を切り取るかどうか
 
         # 保存するかどうか
-        self.is_save_img = False   # 画像
-        self.is_save_wav = False   # 切り分けた wav
+        self.is_save_img = True   # 画像
+        self.is_save_wav = True   # 切り分けた wav
 
         # 増幅したデータを保存するかどうか
         # （↑が False なら True でも保存しない）
@@ -33,12 +33,11 @@ class GlobalVariables:
 
         # 増幅するかどうか
         self.is_audio_augment = True
-        # separate == False, のときうまくプロットされない
 
-        # 増幅の種類 (librosa 使えるならもっと?)
+        # 増幅の種類
         self.aa_exec_whitenoise = True      # implemented
-        # self.aa_exec_change_pitch = False  # unimplemented
-        # self.aa_exec_change_speed = False  # unimplemented
+        # self.aa_exec_change_pitch = False  # unimplemented (librosa)
+        # self.aa_exec_change_speed = False  # unimplemented (librosa)
 
         # ----- 確認用（debug）---------------------------
         # プロットした画像をウィンドウで表示するかどうか
@@ -48,7 +47,7 @@ class GlobalVariables:
         # 順番にウィンドウで表示するかどうか
         # => N秒ごとに更新
         self.plt_show_pause = True
-        self.plt_pause_interval = 0.15
+        self.plt_pause_interval = 0.01
 
         # ============== COMPLEX_SETTINGS ===============
 
