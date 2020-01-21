@@ -9,7 +9,7 @@ class GlobalVariables:
 
         # 保存するかどうか
         self.is_save_img = True   # 画像
-        self.is_save_wav = True   # 切り分けた wav
+        self.is_save_wav = False   # 切り分けた wav
 
         # 増幅したデータを保存するかどうか
         # （↑が False なら True でも保存しない）
@@ -33,11 +33,12 @@ class GlobalVariables:
 
         # 増幅するかどうか
         self.is_audio_augment = True
+        # separate == False, のときうまくプロットされない
 
-        # 増幅の種類
+        # 増幅の種類 (librosa 使えるならもっと?)
         self.aa_exec_whitenoise = True      # implemented
-        # self.aa_exec_change_pitch = False  # unimplemented (librosa)
-        # self.aa_exec_change_speed = False  # unimplemented (librosa)
+        self.aa_exec_change_pitch = True  # unimplemented
+        # self.aa_exec_change_speed = False  # unimplemented
 
         # ----- 確認用（debug）---------------------------
         # プロットした画像をウィンドウで表示するかどうか
@@ -55,12 +56,13 @@ class GlobalVariables:
         self.img_exp_dir = 'spectrum-img'   # 画像出力先ディレクトリ
         self.wav_exp_dir = 'wav_exp'        # wav 出力先ディレクトリ
 
-        # (Y_top, X_left, Y_bottom, X_right)
-        self.crop_range = (143, 58, 514, 427)   # 画像の切り取り範囲
+        # ~~(Y_top, X_left, Y_bottom, X_right)
+        # left, upper, right, lower
+        self.crop_range = (143, 52, 513, 422)   # 画像の切り取り範囲
 
         """ AUDIO AUGMENTATION """
         # 500 ~ 2000
-        self.whitenoise_range = [500, 2000]     # ノイズの範囲
+        self.whitenoise_range = [1000, 3000]     # ノイズの範囲
         # self.whitenoise_range = 1000  # only one time
         # step by 500
         self.whitenoise_step = 500      # 段階
