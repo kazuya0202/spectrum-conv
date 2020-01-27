@@ -33,6 +33,7 @@ class SpectrumConversion:
         data = None
 
         # 刻みずつずらしながら窓幅分のデータをフーリエ変換
+        print(((sample.shape[0] - w) / s))
         for i in range(int((sample.shape[0] - w) / s)):
             data = sample[i * s:i * s + w]
             spec = np.fft.fft(data)
@@ -70,6 +71,10 @@ class SpectrumConversion:
                     vmin=vmin,
                     cbar=cbar,
                     square=square)
+
+        # Y軸の反転
+        ax = plt.gca()
+        ax.invert_yaxis()
 
         # プロットした図を保存
         plt_fig = plt.gcf()

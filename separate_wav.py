@@ -61,7 +61,7 @@ class SeparateWave:
 
         # フレームに応じて図の横幅が変わるため、一定値にする
         # frames = int(self.ch * self.fr * st)
-        frames = int(self.ch * self.fr)
+        # frames = int(self.ch * self.fr)
 
         # num_cut = int(self.total_time_int // st)
         # num_cut = self.total_time_int

@@ -65,11 +65,6 @@ class Main:
             plt_fig.savefig(str(img_path))
             print(f'  {img_path}')
 
-            from PIL import Image, ImageOps
-            im = Image.open(str(img_path))
-            im_flip = ImageOps.flip(im)
-            im_flip.save(str(img_path), quality=100)
-
             # 切り取るなら
             if self.gv.is_crop:
                 ul.crop_img(self.gv.crop_range, img_path)
