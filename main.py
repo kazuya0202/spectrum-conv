@@ -2,6 +2,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+from PIL import Image
 
 # my packages
 import utils as ul
@@ -62,13 +63,19 @@ class Main:
             jpg_name = f'{exp_path}.jpg'
             img_path = self.img_exp_dir.joinpath(jpg_name)
 
-            plt_fig.savefig(str(img_path))
+            # plt_fig.savefig(str(img_path))
+            plt_fig.savefig(str(img_path), transparent=True, bbox_inches='tight', pad_inches=0)
             print(f'  {img_path}')
 
+            if self.gv.is_resize:
+                img = Image.open(str(img_path))
+                img = img.resize(self.gv.resize_size)
+                img.save(str(img_path))
+
             # 切り取るなら
-            if self.gv.is_crop:
-                ul.crop_img(self.gv.crop_range, img_path)
-                print(f'    -> croped.')
+            # if self.gv.is_crop:
+            #     ul.crop_img(self.gv.crop_range, img_path)
+            #     print(f'    -> croped.')
 
         # --- save wav ---
         #   when file is separated

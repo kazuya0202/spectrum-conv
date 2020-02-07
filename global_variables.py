@@ -5,7 +5,9 @@ class GlobalVariables:
         # =============== USER_SETTINGS =================
 
         self.is_separate = True     # wav を1秒ごとに切り分けるかどうか
-        self.is_crop = False         # 余白を切り取るかどうか
+        # self.is_crop = False         # 余白を切り取るかどうか
+        self.is_resize = True
+        self.resize_size = (400, 400)
 
         # 保存するかどうか
         self.is_save_img = True   # 画像
@@ -18,7 +20,7 @@ class GlobalVariables:
 
         # plot config
         self.plt_conf = {
-            'xy': True,    # X, Y 軸を表示するかどうか
+            'xy': False,    # X, Y 軸を表示するかどうか
             'cbar': False,  # カラーバーを表示するかどうか
 
             # ===== 特に変更する必要はない =====
@@ -32,12 +34,12 @@ class GlobalVariables:
         }
 
         # 増幅するかどうか
-        self.is_audio_augment = False
+        self.is_audio_augment = True
         # separate == False, のときうまくプロットされない
 
         # 増幅の種類 (librosa 使えるならもっと?)
         self.aa_exec_whitenoise = True      # implemented
-        self.aa_exec_change_pitch = True  # unimplemented
+        # self.aa_exec_change_pitch = False  # unimplemented
         # self.aa_exec_change_speed = False  # unimplemented
 
         # ----- 確認用（debug）---------------------------
