@@ -33,7 +33,6 @@ class SpectrumConversion:
         data = None
 
         # 刻みずつずらしながら窓幅分のデータをフーリエ変換
-        print(((sample.shape[0] - w) / s))
         for i in range(int((sample.shape[0] - w) / s)):
             data = sample[i * s:i * s + w]
             spec = np.fft.fft(data)

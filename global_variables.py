@@ -5,8 +5,7 @@ class GlobalVariables:
         # =============== USER_SETTINGS =================
 
         self.is_separate = True     # wav を1秒ごとに切り分けるかどうか
-        # self.is_crop = False         # 余白を切り取るかどうか
-        self.is_resize = True
+        self.is_resize = True  # 画像サイズをリサイズするかどうか
         self.resize_size = (400, 400)
 
         # 保存するかどうか
@@ -58,16 +57,9 @@ class GlobalVariables:
         self.img_exp_dir = 'spectrum-img'   # 画像出力先ディレクトリ
         self.wav_exp_dir = 'wav_exp'        # wav 出力先ディレクトリ
 
-        # ~~(Y_top, X_left, Y_bottom, X_right)
-        # left, upper, right, lower
-        self.crop_range = (143, 52, 513, 422)   # 画像の切り取り範囲
-
         """ AUDIO AUGMENTATION """
-        # 500 ~ 2000
-        self.whitenoise_range = [1000, 3000]     # ノイズの範囲
-        # self.whitenoise_range = 1000  # only one time
-        # step by 500
-        self.whitenoise_step = 500      # 段階
+        self.whitenoise_percentage = [5, 15]  # n % ~ m %
+        self.whitenoise_step = 5      # 段階(刻み)
 
         """ SEPARATE WAVE """
         # ずらす間隔

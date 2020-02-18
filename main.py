@@ -248,13 +248,13 @@ class Main:
         return 0
 
     def augment(self, data, base_exp_path):
-        def augment_whitenoise(data, ratio):
+        def augment_whitenoise(data, percent):
             """ White Noise """
-            params = data, ratio
+            params = [data, percent]
             augmented_data = self.aa.append_white_noise(*params)
 
             # # convert numpy to AudioSegment
-            exp_path = f'{base_exp_path}_noise[{int(ratio)}]'
+            exp_path = f'{base_exp_path}_noise[{int(percent)}%]'
             self.flow(augmented_data, exp_path, from_augment=True)
 
             # self.sw.data = augmented_data
@@ -270,7 +270,7 @@ class Main:
 
         # augment
         if self.gv.aa_exec_whitenoise:
-            _range = self.gv.whitenoise_range
+            _range = self.gv.whitenoise_percentage
 
             # not list
             if not isinstance(_range, list):
@@ -283,14 +283,13 @@ class Main:
 
                 noise_range = np.linspace(_min, _max, num)
 
-                for _, ratio in enumerate(noise_range):
+                for _, percent in enumerate(noise_range):
                     # ignore original
-                    if ratio == 0:
+                    if percent == 0:
                         continue
 
                     # append white noise
-                    # params = [data, ratio]
-                    augment_whitenoise(data, ratio)
+                    augment_whitenoise(data, percent)
 
         # another augmentation
 
