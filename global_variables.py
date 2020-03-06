@@ -6,7 +6,14 @@ class GlobalVariables:
 
         self.is_separate = True     # wav を1秒ごとに切り分けるかどうか
         self.is_resize = True  # 画像サイズをリサイズするかどうか
-        self.resize_size = (400, 400)
+        self.resize_size = (300, 300)
+
+        #  vflip |   True   |   False
+        # -------+----------+-----------
+        #  上部  | 高周波数 | 低周波数
+        # (画像) |    ↕    |    ↕
+        #  下部  | 低周波数 | 高周波数
+        self.vflip = True
 
         # 保存するかどうか
         self.is_save_img = True   # 画像

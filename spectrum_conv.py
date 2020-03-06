@@ -19,7 +19,7 @@ class SpectrumConversion:
         if plt_conf is not None:
             self.plt_conf = plt_conf
 
-    def conv_and_plot(self, sound):
+    def conv_and_plot(self, sound, vflip=True):
         sample = sound._data
 
         """ スペクトログラム作成 """
@@ -72,8 +72,9 @@ class SpectrumConversion:
                     square=square)
 
         # Y軸の反転
-        ax = plt.gca()
-        ax.invert_yaxis()
+        if vflip:
+            ax = plt.gca()
+            ax.invert_yaxis()
 
         # プロットした図を保存
         plt_fig = plt.gcf()

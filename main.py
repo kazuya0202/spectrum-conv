@@ -1,15 +1,17 @@
+import io
 import sys
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
 from PIL import Image
 
 # my packages
 import utils as ul
-from spectrum_conv import SpectrumConversion
+from audio_augment import AudioAugmentation
 from global_variables import GlobalVariables
 from separate_wav import SeparateWave
-from audio_augment import AudioAugmentation
+from spectrum_conv import SpectrumConversion
 
 
 class Main:
@@ -72,11 +74,6 @@ class Main:
                 img = img.resize(self.gv.resize_size)
                 img.save(str(img_path))
 
-            # 切り取るなら
-            # if self.gv.is_crop:
-            #     ul.crop_img(self.gv.crop_range, img_path)
-            #     print(f'    -> croped.')
-
         # --- save wav ---
         #   when file is separated
         if wav_data is not None:
@@ -86,9 +83,6 @@ class Main:
             self.sw.save_as_wav(str(wav_path))
             print(f'  {wav_path}')
 
-        """ MEMO
-        毎回挟まないと、cbarが無限に増えていく現象が起こった
-        """
         # clear cache
         plt.clf()
 
@@ -168,7 +162,7 @@ class Main:
         #     => convert, plot, save
 
         def convert(sound):
-            plt_fig = self.sc.conv_and_plot(sound)
+            plt_fig = self.sc.conv_and_plot(sound, self.gv.vflip)
             is_show = any([self.gv.plt_show_img, self.gv.plt_show_pause])
 
             if self.gv.plt_conf['xy'] and is_show:
@@ -216,7 +210,6 @@ class Main:
 
             # wav ファイルでないなら continue
             if not self.path.suffix == '.wav':
-                # ffmpeg つかって encode 関数でも作る?
                 print('It is not wav file.')
                 continue
 
