@@ -8,12 +8,12 @@ class SpectrumConversion:
     def __init__(self, plt_conf=None):
         # プロットの設定
         self.plt_conf = {
-            'x': False,
-            'y': False,
-            'cbar': False,
-            'cmap': plt.cm.gist_rainbow_r,
-            'vmin': -1,
-            'square': True
+            "x": False,
+            "y": False,
+            "cbar": False,
+            "cmap": plt.cm.gist_rainbow_r,
+            "vmin": -1,
+            "square": True,
         }
 
         if plt_conf is not None:
@@ -24,7 +24,7 @@ class SpectrumConversion:
 
         """ スペクトログラム作成 """
         w = 1024  # 窓枠
-        s = 512   # 刻み
+        s = 512  # 刻み
 
         ampList = []  # スペクトル格納用
         argList = []  # 偏角格納用
@@ -34,16 +34,16 @@ class SpectrumConversion:
 
         # 刻みずつずらしながら窓幅分のデータをフーリエ変換
         for i in range(int((sample.shape[0] - w) / s)):
-            data = sample[i * s:i * s + w]
+            data = sample[i * s : i * s + w]
             spec = np.fft.fft(data)
-            spec = spec[:int(spec.shape[0] / 2)]
+            spec = spec[: int(spec.shape[0] / 2)]
             spec[0] /= 2
             ampList.append(np.abs(spec))
             argList.append(np.angle(spec))
 
         # 周期数は共通なので1回だけ計算（縦軸表示に使う）
         freq = np.fft.fftfreq(data.shape[0], 1.0 / sound.frame_rate)
-        freq = freq[:int(freq.shape[0] / 2)]
+        freq = freq[: int(freq.shape[0] / 2)]
 
         # 時間も共通なので1回だけ計算（横軸表示に使う）
         time = np.arange(0, i + 1, 1) * s / sound.frame_rate
@@ -56,20 +56,22 @@ class SpectrumConversion:
         plt_data = pd.DataFrame(data=ampList, index=time, columns=freq)
 
         # plot config
-        xticklabels = self.plt_conf['x']
-        yticklabels = self.plt_conf['y']
-        cmap = self.plt_conf['cmap']
-        vmin = self.plt_conf['vmin']
-        cbar = self.plt_conf['cbar']
-        square = self.plt_conf['square']
+        xticklabels = self.plt_conf["x"]
+        yticklabels = self.plt_conf["y"]
+        cmap = self.plt_conf["cmap"]
+        vmin = self.plt_conf["vmin"]
+        cbar = self.plt_conf["cbar"]
+        square = self.plt_conf["square"]
 
-        sns.heatmap(data=np.log(plt_data.iloc[:, :100].T),
-                    xticklabels=xticklabels,
-                    yticklabels=yticklabels,
-                    cmap=cmap,
-                    vmin=vmin,
-                    cbar=cbar,
-                    square=square)
+        sns.heatmap(
+            data=np.log(plt_data.iloc[:, :100].T),
+            xticklabels=xticklabels,
+            yticklabels=yticklabels,
+            cmap=cmap,
+            vmin=vmin,
+            cbar=cbar,
+            square=square,
+        )
 
         # Y軸の反転
         if vflip:
@@ -156,9 +158,9 @@ class SpectrumConversion:
             for i, label in enumerate(labels):
                 if (i % interval == 0) or ((len(labels) - 1) == i):
                     txt = label.get_text()
-                    labels[i] = txt[:txt.find('.') + 3]
+                    labels[i] = txt[: txt.find(".") + 3]
                 else:
-                    labels[i] = ''
+                    labels[i] = ""
             return labels
 
         # 各軸のラベルを取得

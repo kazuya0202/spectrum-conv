@@ -21,7 +21,7 @@ def load_wav(wav_path):
 
     # サンプルデータ取得
     samples = np.array(sound.get_array_of_samples())
-    sample = samples[::sound.channels]
+    sample = samples[:: sound.channels]
     sound._data = sample
 
     return sound
@@ -38,7 +38,7 @@ def crop_img(crop_range, img_path):
 def save_as_wav(data, sample_width, frame_rate, channels, exp_path):
     """ wave ファイルとして保存 """
 
-    with wave.open(exp_path, 'w') as w:
+    with wave.open(exp_path, "w") as w:
         w.setsampwidth(sample_width)
         w.setframerate(frame_rate)
         w.setnchannels(channels)
@@ -60,13 +60,11 @@ def numpy2AudioSegment(data, sample_width, frame_rate, channels):
     """
 
     sound = AudioSegment(
-        data=data,
-        sample_width=sample_width,
-        frame_rate=frame_rate,
-        channels=channels)
+        data=data, sample_width=sample_width, frame_rate=frame_rate, channels=channels
+    )
 
     samples = np.array(sound.get_array_of_samples())
-    sample = samples[::sound.channels]
+    sample = samples[:: sound.channels]
     sound._data = sample
 
     return sound
