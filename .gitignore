@@ -2,6 +2,8 @@ spectrum-img/
 wav_exp/
 **/__pycache__/
 
-*.wav
+**/*.wav
+!./crossing-sample.wav
+!./cat-sample.wav
 
 wav/
