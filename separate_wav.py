@@ -1,6 +1,6 @@
 import wave
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Tuple
 
 import numpy as np
 from pydub import AudioSegment
@@ -108,18 +108,21 @@ class SeparateWave:
 
     # def separate_wav(self, path, cut_interval, shift_time):
     def separate_wav(self, cut_interval, shift_time):
-        frames = int(self.s_info.channels * self.s_info.f_rate)
+        # frames = int(self.s_info.channels * self.s_info.f_rate)
+        frames = self.s_info.f_rate
         shift_frames = int(frames * shift_time)
+        chunk_size = int(frames * cut_interval)
 
         sample = frombuffer(self.s_info.data, dtype=int16)
-        delimiter = len(sample) // shift_frames  # delimit step
+        sample_len = len(sample)
+
+        def calc_begin_end(offset: int) -> Tuple[int, int]:
+            begin = offset * shift_frames
+            end = begin + chunk_size
+            return begin, end
+
+        delimiter = ((sample_len - frames) // shift_frames) + 1
 
         for i in range(delimiter):
-            bgn = i * shift_frames
-            end = int(bgn + frames * cut_interval)
-
-            if end >= len(sample):
-                return None
-
-            wav_data = sample[bgn:end]  # cut
-            yield wav_data  # generator
+            begin, end = calc_begin_end(offset=i)
+            yield sample[begin:end]
